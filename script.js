@@ -1,7 +1,8 @@
 const map = document.getElementById("map");
 const mainMap = document.getElementById("mainMap");
 const mapTitle = document.getElementById("mapTitle");
-const delPuerto = document.getElementById("delPuerto");
+const mapTitle2 = document.getElementById("mapTitle2");
+const more = document.getElementById("more");
 
 let x = 0;
 let y = 0;
@@ -29,7 +30,7 @@ function updateMap() {
 
 
 // =========================
-// ПЕРЕМЕЩЕНИЕ КАРТЫ
+// ПЕРЕМЕЩЕНИЕ МЫШЬЮ
 // =========================
 
 map.addEventListener("pointerdown", (e) => {
@@ -52,13 +53,15 @@ map.addEventListener("pointerdown", (e) => {
     startMapX = x;
     startMapY = y;
 
-    if (e.pointerType === "mouse") {
-        map.setPointerCapture(e.pointerId);
-    }
+    map.setPointerCapture(e.pointerId);
 });
 
 
 map.addEventListener("pointermove", (e) => {
+
+    if (e.pointerType === "touch") {
+        return;
+    }
 
     if (!dragging) {
         return;
@@ -71,18 +74,24 @@ map.addEventListener("pointermove", (e) => {
 });
 
 
-map.addEventListener("pointerup", () => {
+map.addEventListener("pointerup", (e) => {
+
+    if (e.pointerType === "touch") {
+        return;
+    }
 
     dragging = false;
-
     mapTitle.textContent = currentTitle;
 });
 
 
-map.addEventListener("pointercancel", () => {
+map.addEventListener("pointercancel", (e) => {
+
+    if (e.pointerType === "touch") {
+        return;
+    }
 
     dragging = false;
-
     mapTitle.textContent = currentTitle;
 });
 
@@ -115,8 +124,9 @@ map.addEventListener("wheel", (e) => {
 
 }, { passive: false });
 
+
 // =========================
-// TOUCH: ПЕРЕМЕЩЕНИЕ + PINCH ZOOM
+// TOUCH + PINCH
 // =========================
 
 let fingers = new Map();
@@ -139,6 +149,7 @@ let pinchStartY = 0;
 
 // Расстояние между пальцами
 function getDistance(a, b) {
+
     return Math.hypot(
         a.x - b.x,
         a.y - b.y
@@ -148,6 +159,7 @@ function getDistance(a, b) {
 
 // Центр пальцев
 function getCenter(a, b) {
+
     return {
         x: (a.x + b.x) / 2,
         y: (a.y + b.y) / 2
@@ -155,10 +167,7 @@ function getCenter(a, b) {
 }
 
 
-// =========================
-// НАЧАЛО КАСАНИЯ
-// =========================
-
+// Начало касания
 document.addEventListener("pointerdown", (e) => {
 
     if (e.pointerType !== "touch") {
@@ -193,6 +202,7 @@ document.addEventListener("pointerdown", (e) => {
     // Второй палец
     if (fingers.size === 2) {
 
+        // Полностью выключаем обычное перемещение
         dragging = false;
 
         const points = [...fingers.values()];
@@ -208,8 +218,7 @@ document.addEventListener("pointerdown", (e) => {
         pinchStartCenterX = center.x;
         pinchStartCenterY = center.y;
 
-        // ВАЖНО:
-        // сохраняем абсолютно текущее положение карты
+        // Текущее положение карты
         pinchStartX = x;
         pinchStartY = y;
     }
@@ -217,10 +226,7 @@ document.addEventListener("pointerdown", (e) => {
 }, true);
 
 
-// =========================
-// ДВИЖЕНИЕ
-// =========================
-
+// Движение пальца
 document.addEventListener("pointermove", (e) => {
 
     if (e.pointerType !== "touch") {
@@ -238,7 +244,7 @@ document.addEventListener("pointermove", (e) => {
 
 
     // =========================
-    // PINCH
+    // ДВА ПАЛЬЦА
     // =========================
 
     if (fingers.size === 2) {
@@ -265,19 +271,31 @@ document.addEventListener("pointermove", (e) => {
         );
 
 
-        // Масштабирование строго относительно
-        // точки начала pinch
+        // Коэффициент масштаба
         const ratio =
             scale / pinchStartScale;
 
 
+        // Смещение центра пальцев
+        const centerMoveX =
+            center.x - pinchStartCenterX;
+
+        const centerMoveY =
+            center.y - pinchStartCenterY;
+
+
+        // Сохраняем точку карты под пальцами
         x =
-            center.x -
-            (pinchStartCenterX - pinchStartX) * ratio;
+            pinchStartX +
+            centerMoveX -
+            (pinchStartCenterX - pinchStartX) *
+            (ratio - 1);
 
         y =
-            center.y -
-            (pinchStartCenterY - pinchStartY) * ratio;
+            pinchStartY +
+            centerMoveY -
+            (pinchStartCenterY - pinchStartY) *
+            (ratio - 1);
 
 
         updateMap();
@@ -308,10 +326,7 @@ document.addEventListener("pointermove", (e) => {
 }, true);
 
 
-// =========================
-// ОТПУСКАНИЕ
-// =========================
-
+// Отпускание пальца
 document.addEventListener("pointerup", (e) => {
 
     if (e.pointerType !== "touch") {
@@ -327,10 +342,7 @@ document.addEventListener("pointerup", (e) => {
 }, true);
 
 
-// =========================
-// ОТМЕНА
-// =========================
-
+// Отмена касания
 document.addEventListener("pointercancel", (e) => {
 
     if (e.pointerType !== "touch") {
@@ -344,6 +356,7 @@ document.addEventListener("pointercancel", (e) => {
     }
 
 }, true);
+
 
 // =========================
 // НАВЕДЕНИЕ НА КАРТУ
@@ -370,293 +383,138 @@ mainMap.addEventListener("mouseleave", () => {
 
 
 // =========================
-// НАВЕДЕНИЕ НА ДЕЛЬ-ПУЭРТО
+// ДАННЫЕ ОБЪЕКТОВ
 // =========================
 
-delPuerto.addEventListener("mouseenter", () => {
+const areas = {
 
-    currentTitle = "Bellmont, Дель-Пуэрто";
+    delPuerto: [
+        "Bellmont, Дель-Пуэрто",
+        "",
+        ""
+    ],
 
-    if (!dragging) {
-        mapTitle.textContent = currentTitle;
+    creatorPark: [
+        "Bellmont, Парк Творца",
+        "",
+        ""
+    ],
+
+    stoneWismant: [
+        "Bellmont, Парк Творца",
+        "Статуя Wismant",
+        "Высота 38m"
+    ],
+
+    fountaunCreator: [
+        "Bellmont, Парк Творца",
+        "Фонтан Творца",
+        "Начало и зарождение Дель-Пуэрто"
+    ],
+
+    makarona: [
+        "Bellmont, Парк Творца",
+        "Пьедестал i_makarona07",
+        "Благодарность за доброту"
+    ],
+
+    walkOfFame: [
+        "Bellmont, Парк Творца",
+        "Аллея славы",
+        "ririkxxs, _ved1mak_ и другие"
+    ],
+
+    bigThrees: [
+        "Bellmont, Парк Творца",
+        "Древнее древо",
+        "Высота: 23m"
+    ],
+
+    firstStreet: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица первозданная",
+        "Протяженность: 112m"
+    ],
+
+    ved1makStreet: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица имени _ved1mak_",
+        "Протяженность: 67m"
+    ],
+
+    problemStreet: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица больших проблем",
+        "Протяженность: 48m"
+    ],
+
+    hotelGrandRed: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица имени _ved1mak_",
+        "Отель Grand Red, 4"
+    ],
+
+    hotelGrandGreen: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица имени _ved1mak_",
+        "Отель Grand Green, 5"
+    ],
+
+    home1: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица первозданная",
+        "Дом Хуаны Гарсии, 1"
+    ],
+
+    home2: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица первозданная",
+        "Дом (Сдается квартира), 2"
+    ],
+
+    laCantina: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица первозданная",
+        "La Cantina, 3"
+    ],
+
+    narkoHome: [
+        "Bellmont, Дель-Пуэрто",
+        "Улица больших проблем",
+        "Магазин Даниэля Фолса, 6"
+    ]
+};
+
+
+// =========================
+// НАВЕДЕНИЕ НА ОБЪЕКТЫ
+// =========================
+
+Object.entries(areas).forEach(([id, data]) => {
+
+    const element = document.getElementById(id);
+
+    if (!element) {
+        return;
     }
+
+    element.addEventListener("mouseenter", () => {
+
+        mapTitle.textContent = data[0];
+        mapTitle2.textContent = data[1];
+        more.textContent = data[2];
+
+    });
+
+    element.addEventListener("mouseleave", () => {
+
+        mapTitle.textContent = "Bellmont";
+        mapTitle2.textContent = "";
+        more.textContent = "";
+
+    });
 });
 
-
-delPuerto.addEventListener("mouseleave", () => {
-
-    currentTitle = "Bellmont";
-
-    if (!dragging) {
-        mapTitle.textContent = currentTitle;
-    }
-});
-
-// =========================
-// НАВЕДЕНИЕ НА ПАРК ТВОРЦА
-// =========================
-const creatorPark = document.getElementById("creatorPark");
-
-creatorPark.addEventListener("mouseenter", () => {
-    currentTitle = "Bellmont, Парк Творца";
-
-    if (!dragging) {
-        mapTitle.textContent = currentTitle;
-    }
-});
-
-creatorPark.addEventListener("mouseleave", () => {
-    currentTitle = "Bellmont";
-
-    if (!dragging) {
-        mapTitle.textContent = currentTitle;
-    }
-});
-
-// =========================
-// НАВЕДЕНИЕ НА СТАТУЮ ВИСМАНТА
-// =========================
-const stoneWismant = document.getElementById("stoneWismant");
-const mapTitle2 = document.getElementById("mapTitle2");
-const more = document.getElementById("more");
-
-stoneWismant.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Парк Творца";
-    mapTitle2.textContent = "Статуя Wismant";
-    more.textContent = "Высота 38m";
-});
-
-stoneWismant.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-// =========================
-// НАВЕДЕНИЕ НА ФОНТАН ТВОРЦА
-// =========================
-const fountaunCreator = document.getElementById("fountaunCreator");
-
-fountaunCreator.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Парк Творца";
-    mapTitle2.textContent = "Фонтан Творца";
-    more.textContent = "Начало и зарождение Дель-Пуэрто";
-});
-
-fountaunCreator.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-// =========================
-// НАВЕДЕНИЕ НА ПЬЕДЕСТАЛ МАКАРОНА
-// =========================
-const makarona = document.getElementById("makarona");
-
-makarona.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Парк Творца";
-    mapTitle2.textContent = "Пьедестал i_makarona07";
-    more.textContent = "Благодарность за доброту";
-});
-
-makarona.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-// =========================
-// НАВЕДЕНИЕ НА АЛЛЕЮ СЛАВЫ
-// =========================
-const walkOfFame = document.getElementById("walkOfFame");
-
-walkOfFame.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Парк Творца";
-    mapTitle2.textContent = "Аллея славы";
-    more.textContent = "ririkxxs, _ved1mak_ и другие";
-});
-
-walkOfFame.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-// =========================
-// НАВЕДЕНИЕ НА ДРЕВНЕЕ ДРЕВО
-// =========================
-const bigThrees = document.getElementById("bigThrees");
-
-bigThrees.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Парк Творца";
-    mapTitle2.textContent = "Древнее древо";
-    more.textContent = "Высота: 23m";
-});
-
-bigThrees.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-// =========================
-// НАВЕДЕНИЕ НА УЛИЦУ ПЕРВОЗДАННУЮ
-// =========================
-const firstStreet = document.getElementById("firstStreet");
-
-firstStreet.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица первозданная";
-    more.textContent = "Протяженность: 112m";
-});
-
-firstStreet.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-// =========================
-// НАВЕДЕНИЕ НА УЛИЦУ ИМЕНИ ВЕДЬМАКА
-// =========================
-const ved1makStreet = document.getElementById("ved1makStreet");
-
-ved1makStreet.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица имени _ved1mak_";
-    more.textContent = "Протяженность: 67m";
-});
-
-ved1makStreet.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-// =========================
-// НАВЕДЕНИЕ НА УЛИЦУ БОЛЬШИХ ПРОБЛЕМ
-// =========================
-const problemStreet = document.getElementById("problemStreet");
-
-problemStreet.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица больших проблем";
-    more.textContent = "Протяженность: 48m";
-});
-
-problemStreet.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-// =========================
-// НАВЕДЕНИЕ НА ОТЕЛЬ ГРАНД РЕД
-// =========================
-const hotelGrandRed = document.getElementById("hotelGrandRed");
-
-hotelGrandRed.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица имени _ved1mak_";
-    more.textContent = "Отель Grand Red, 4";
-});
-
-hotelGrandRed.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-// =========================
-// НАВЕДЕНИЕ НА ОТЕЛЬ ГРАНД ГРИН
-// =========================
-const hotelGrandGreen = document.getElementById("hotelGrandGreen");
-
-hotelGrandGreen.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица имени _ved1mak_";
-    more.textContent = "Отель Grand Green, 5";
-});
-
-hotelGrandGreen.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-// =========================
-// НАВЕДЕНИЕ НА HOME 1
-// =========================
-
-const home1 = document.getElementById("home1");
-
-home1.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица первозданная";
-    more.textContent = "Дом Хуаны Гарсии, 1";
-});
-
-home1.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-
-// =========================
-// НАВЕДЕНИЕ НА HOME 2
-// =========================
-
-const home2 = document.getElementById("home2");
-
-home2.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица первозданная";
-    more.textContent = "Дом (Сдается квартира), 2";
-});
-
-home2.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-
-// =========================
-// НАВЕДЕНИЕ НА LA CANTINA
-// =========================
-
-const laCantina = document.getElementById("laCantina");
-
-laCantina.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица первозданная";
-    more.textContent = "La Cantina, 3";
-});
-
-laCantina.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
-
-
-// =========================
-// НАВЕДЕНИЕ НА NARKO HOME
-// =========================
-
-const narkoHome = document.getElementById("narkoHome");
-
-narkoHome.addEventListener("mouseenter", () => {
-    mapTitle.textContent = "Bellmont, Дель-Пуэрто";
-    mapTitle2.textContent = "Улица больших проблем";
-    more.textContent = "Магазин Даниэля Фолса, 6";
-});
-
-narkoHome.addEventListener("mouseleave", () => {
-    mapTitle.textContent = "Bellmont";
-    mapTitle2.textContent = "";
-    more.textContent = "";
-});
 
 // =========================
 // ЗАПУСК
