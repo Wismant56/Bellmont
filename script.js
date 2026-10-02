@@ -133,8 +133,8 @@ let pinchStartScale = 1;
 let pinchStartCenterX = 0;
 let pinchStartCenterY = 0;
 
-let pinchStartMapX = 0;
-let pinchStartMapY = 0;
+let pinchStartX = 0;
+let pinchStartY = 0;
 
 
 // Расстояние между пальцами
@@ -146,7 +146,7 @@ function getDistance(a, b) {
 }
 
 
-// Центр между пальцами
+// Центр пальцев
 function getCenter(a, b) {
     return {
         x: (a.x + b.x) / 2,
@@ -178,15 +178,13 @@ document.addEventListener("pointerdown", (e) => {
     // Первый палец
     if (fingers.size === 1) {
 
-        const point = [...fingers.values()][0];
+        dragging = true;
 
-        touchStartX = point.x;
-        touchStartY = point.y;
+        touchStartX = e.clientX;
+        touchStartY = e.clientY;
 
         touchStartMapX = x;
         touchStartMapY = y;
-
-        dragging = true;
 
         return;
     }
@@ -210,8 +208,10 @@ document.addEventListener("pointerdown", (e) => {
         pinchStartCenterX = center.x;
         pinchStartCenterY = center.y;
 
-        pinchStartMapX = x;
-        pinchStartMapY = y;
+        // ВАЖНО:
+        // сохраняем абсолютно текущее положение карты
+        pinchStartX = x;
+        pinchStartY = y;
     }
 
 }, true);
@@ -238,7 +238,7 @@ document.addEventListener("pointermove", (e) => {
 
 
     // =========================
-    // ДВА ПАЛЬЦА
+    // PINCH
     // =========================
 
     if (fingers.size === 2) {
@@ -265,68 +265,19 @@ document.addEventListener("pointermove", (e) => {
         );
 
 
-        // Точка карты, которая находилась
-        // под центром пальцев в начале pinch
-        // =========================
-// ДВА ПАЛЬЦА
-// =========================
-
-if (fingers.size === 2) {
-
-    e.preventDefault();
-
-    const points = [...fingers.values()];
-
-    const distance =
-        getDistance(points[0], points[1]);
-
-    const center =
-        getCenter(points[0], points[1]);
+        // Масштабирование строго относительно
+        // точки начала pinch
+        const ratio =
+            scale / pinchStartScale;
 
 
-    // Масштаб относительно начального состояния
-    const newScale =
-        pinchStartScale *
-        (distance / pinchStartDistance);
-
-    scale = Math.max(
-        0.2,
-        Math.min(newScale, 5)
-    );
-
-
-    // Точка карты под начальным центром пальцев
-    const offsetX =
-        pinchStartCenterX - pinchStartMapX;
-
-    const offsetY =
-        pinchStartCenterY - pinchStartMapY;
-
-
-    // Сохраняем её под текущим центром пальцев
-    x =
-        center.x -
-        offsetX * (scale / pinchStartScale);
-
-    y =
-        center.y -
-        offsetY * (scale / pinchStartScale);
-
-
-    updateMap();
-
-    return;
-}
-
-
-        // Сохраняем эту точку под пальцами
         x =
             center.x -
-            worldX * scale;
+            (pinchStartCenterX - pinchStartX) * ratio;
 
         y =
             center.y -
-            worldY * scale;
+            (pinchStartCenterY - pinchStartY) * ratio;
 
 
         updateMap();
@@ -393,6 +344,7 @@ document.addEventListener("pointercancel", (e) => {
     }
 
 }, true);
+
 // =========================
 // НАВЕДЕНИЕ НА КАРТУ
 // =========================
