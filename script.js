@@ -110,15 +110,45 @@ map.addEventListener("wheel", (e) => {
 }, { passive: false });
 
 // =========================
-// PINCH ZOOM НА ТЕЛЕФОНЕ
+// ZOOM ДЛЯ ВСЕЙ КАРТЫ
 // =========================
 
 let fingers = new Map();
 
 let pinchStartDistance = 0;
 let pinchStartScale = 1;
+let pinchCenterX = 0;
+let pinchCenterY = 0;
 
-map.addEventListener("pointerdown", (e) => {
+function getDistance(a, b) {
+    return Math.hypot(
+        a.x - b.x,
+        a.y - b.y
+    );
+}
+
+function getCenter(a, b) {
+    return {
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2
+    };
+}
+
+
+// Начало касания
+document.addEventListener("pointerdown", (e) => {
+
+    if (e.pointerType !== "touch") {
+        return;
+    }
+
+    if (
+        e.target !== map &&
+        !e.target.closest("#map")
+    ) {
+        return;
+    }
+
     fingers.set(e.pointerId, {
         x: e.clientX,
         y: e.clientY
@@ -128,19 +158,24 @@ map.addEventListener("pointerdown", (e) => {
 
         const points = [...fingers.values()];
 
-        pinchStartDistance = Math.hypot(
-            points[0].x - points[1].x,
-            points[0].y - points[1].y
-        );
+        pinchStartDistance =
+            getDistance(points[0], points[1]);
 
         pinchStartScale = scale;
+
+        const center =
+            getCenter(points[0], points[1]);
+
+        pinchCenterX = center.x;
+        pinchCenterY = center.y;
 
         dragging = false;
     }
 });
 
 
-map.addEventListener("pointermove", (e) => {
+// Движение пальцев
+document.addEventListener("pointermove", (e) => {
 
     if (!fingers.has(e.pointerId)) {
         return;
@@ -157,35 +192,55 @@ map.addEventListener("pointermove", (e) => {
 
     const points = [...fingers.values()];
 
-    const distance = Math.hypot(
-        points[0].x - points[1].x,
-        points[0].y - points[1].y
-    );
+    const distance =
+        getDistance(points[0], points[1]);
 
-    const newScale =
+    const oldScale = scale;
+
+    scale =
         pinchStartScale *
         (distance / pinchStartDistance);
 
     scale = Math.max(
         0.2,
-        Math.min(newScale, 5)
+        Math.min(scale, 5)
     );
+
+
+    // Сохраняем точку между пальцами
+    const center =
+        getCenter(points[0], points[1]);
+
+    x =
+        center.x -
+        (pinchCenterX - x) *
+        (scale / oldScale);
+
+    y =
+        center.y -
+        (pinchCenterY - y) *
+        (scale / oldScale);
 
     updateMap();
 });
 
 
-function removeFinger(e) {
+// Конец касания
+document.addEventListener("pointerup", (e) => {
     fingers.delete(e.pointerId);
 
     if (fingers.size < 2) {
         pinchStartDistance = 0;
     }
-}
+});
 
+document.addEventListener("pointercancel", (e) => {
+    fingers.delete(e.pointerId);
 
-map.addEventListener("pointerup", removeFinger);
-map.addEventListener("pointercancel", removeFinger);
+    if (fingers.size < 2) {
+        pinchStartDistance = 0;
+    }
+});
 
 // =========================
 // НАВЕДЕНИЕ НА КАРТУ
