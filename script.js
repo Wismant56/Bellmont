@@ -48,7 +48,9 @@ map.addEventListener("pointerdown", (e) => {
     startMapX = x;
     startMapY = y;
 
+    if (e.pointerType === "mouse") {
     map.setPointerCapture(e.pointerId);
+}
 });
 
 
@@ -118,9 +120,6 @@ let fingers = new Map();
 let pinchStartDistance = 0;
 let pinchStartScale = 1;
 
-let pinchCenterX = 0;
-let pinchCenterY = 0;
-
 
 // Расстояние между пальцами
 function getDistance(a, b) {
@@ -156,8 +155,6 @@ document.addEventListener("pointerdown", (e) => {
         y: e.clientY
     });
 
-
-    // Второй палец
     if (fingers.size === 2) {
 
         const points = [...fingers.values()];
@@ -167,17 +164,10 @@ document.addEventListener("pointerdown", (e) => {
 
         pinchStartScale = scale;
 
-        const center =
-            getCenter(points[0], points[1]);
-
-        pinchCenterX = center.x;
-        pinchCenterY = center.y;
-
-        // Останавливаем перемещение карты
         dragging = false;
     }
 
-}, true); // <-- ВАЖНО: capture
+}, true);
 
 
 // Движение пальцев
@@ -196,7 +186,6 @@ document.addEventListener("pointermove", (e) => {
         y: e.clientY
     });
 
-
     if (fingers.size !== 2) {
         return;
     }
@@ -208,8 +197,17 @@ document.addEventListener("pointermove", (e) => {
     const distance =
         getDistance(points[0], points[1]);
 
-    const oldScale = scale;
+    const center =
+        getCenter(points[0], points[1]);
 
+    // Точка карты под центром пальцев
+    const worldX =
+        (center.x - x) / scale;
+
+    const worldY =
+        (center.y - y) / scale;
+
+    // Новый масштаб
     scale =
         pinchStartScale *
         (distance / pinchStartDistance);
@@ -219,27 +217,13 @@ document.addEventListener("pointermove", (e) => {
         Math.min(scale, 5)
     );
 
-
-    // Центр между пальцами
-    const center =
-        getCenter(points[0], points[1]);
-
-
-    // Сохраняем точку под пальцами
-    x =
-        center.x -
-        (pinchCenterX - x) *
-        (scale / oldScale);
-
-    y =
-        center.y -
-        (pinchCenterY - y) *
-        (scale / oldScale);
-
+    // Оставляем карту под пальцами
+    x = center.x - worldX * scale;
+    y = center.y - worldY * scale;
 
     updateMap();
 
-}, true); // <-- тоже capture
+}, true);
 
 
 // Палец убрали
@@ -256,6 +240,10 @@ document.addEventListener("pointerup", (e) => {
 
 // Отмена касания
 document.addEventListener("pointercancel", (e) => {
+
+    if (e.pointerType !== "touch") {
+        return;
+    }
 
     fingers.delete(e.pointerId);
 
