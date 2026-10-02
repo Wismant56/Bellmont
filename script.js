@@ -110,16 +110,19 @@ map.addEventListener("wheel", (e) => {
 }, { passive: false });
 
 // =========================
-// ZOOM ДЛЯ ВСЕЙ КАРТЫ
+// PINCH ZOOM НА ВСЕЙ КАРТЕ
 // =========================
 
 let fingers = new Map();
 
 let pinchStartDistance = 0;
 let pinchStartScale = 1;
+
 let pinchCenterX = 0;
 let pinchCenterY = 0;
 
+
+// Расстояние между пальцами
 function getDistance(a, b) {
     return Math.hypot(
         a.x - b.x,
@@ -127,6 +130,8 @@ function getDistance(a, b) {
     );
 }
 
+
+// Центр между пальцами
 function getCenter(a, b) {
     return {
         x: (a.x + b.x) / 2,
@@ -142,10 +147,7 @@ document.addEventListener("pointerdown", (e) => {
         return;
     }
 
-    if (
-        e.target !== map &&
-        !e.target.closest("#map")
-    ) {
+    if (!e.target.closest("#map")) {
         return;
     }
 
@@ -154,6 +156,8 @@ document.addEventListener("pointerdown", (e) => {
         y: e.clientY
     });
 
+
+    // Второй палец
     if (fingers.size === 2) {
 
         const points = [...fingers.values()];
@@ -169,13 +173,19 @@ document.addEventListener("pointerdown", (e) => {
         pinchCenterX = center.x;
         pinchCenterY = center.y;
 
+        // Останавливаем перемещение карты
         dragging = false;
     }
-});
+
+}, true); // <-- ВАЖНО: capture
 
 
 // Движение пальцев
 document.addEventListener("pointermove", (e) => {
+
+    if (e.pointerType !== "touch") {
+        return;
+    }
 
     if (!fingers.has(e.pointerId)) {
         return;
@@ -186,9 +196,12 @@ document.addEventListener("pointermove", (e) => {
         y: e.clientY
     });
 
+
     if (fingers.size !== 2) {
         return;
     }
+
+    e.preventDefault();
 
     const points = [...fingers.values()];
 
@@ -207,10 +220,12 @@ document.addEventListener("pointermove", (e) => {
     );
 
 
-    // Сохраняем точку между пальцами
+    // Центр между пальцами
     const center =
         getCenter(points[0], points[1]);
 
+
+    // Сохраняем точку под пальцами
     x =
         center.x -
         (pinchCenterX - x) *
@@ -221,26 +236,30 @@ document.addEventListener("pointermove", (e) => {
         (pinchCenterY - y) *
         (scale / oldScale);
 
+
     updateMap();
-});
+
+}, true); // <-- тоже capture
 
 
-// Конец касания
+// Палец убрали
 document.addEventListener("pointerup", (e) => {
+
+    if (e.pointerType !== "touch") {
+        return;
+    }
+
     fingers.delete(e.pointerId);
 
-    if (fingers.size < 2) {
-        pinchStartDistance = 0;
-    }
-});
+}, true);
 
+
+// Отмена касания
 document.addEventListener("pointercancel", (e) => {
+
     fingers.delete(e.pointerId);
 
-    if (fingers.size < 2) {
-        pinchStartDistance = 0;
-    }
-});
+}, true);
 
 // =========================
 // НАВЕДЕНИЕ НА КАРТУ
