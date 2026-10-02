@@ -267,13 +267,56 @@ document.addEventListener("pointermove", (e) => {
 
         // Точка карты, которая находилась
         // под центром пальцев в начале pinch
-        const worldX =
-            (pinchStartCenterX - pinchStartMapX)
-            / pinchStartScale;
+        // =========================
+// ДВА ПАЛЬЦА
+// =========================
 
-        const worldY =
-            (pinchStartCenterY - pinchStartMapY)
-            / pinchStartScale;
+if (fingers.size === 2) {
+
+    e.preventDefault();
+
+    const points = [...fingers.values()];
+
+    const distance =
+        getDistance(points[0], points[1]);
+
+    const center =
+        getCenter(points[0], points[1]);
+
+
+    // Масштаб относительно начального состояния
+    const newScale =
+        pinchStartScale *
+        (distance / pinchStartDistance);
+
+    scale = Math.max(
+        0.2,
+        Math.min(newScale, 5)
+    );
+
+
+    // Точка карты под начальным центром пальцев
+    const offsetX =
+        pinchStartCenterX - pinchStartMapX;
+
+    const offsetY =
+        pinchStartCenterY - pinchStartMapY;
+
+
+    // Сохраняем её под текущим центром пальцев
+    x =
+        center.x -
+        offsetX * (scale / pinchStartScale);
+
+    y =
+        center.y -
+        offsetY * (scale / pinchStartScale);
+
+
+    updateMap();
+
+    return;
+}
 
 
         // Сохраняем эту точку под пальцами
