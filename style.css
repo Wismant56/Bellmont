@@ -1,0 +1,235 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #314467;
+
+    font-family: Andale Mono, monospace;
+}
+
+#map {
+    position: absolute;
+    left: 0;
+    top: 0;
+
+    touch-action: none;
+    cursor: grab;
+
+    transform-origin: 0 0;
+}
+
+#map:active {
+    cursor: grabbing;
+}
+
+#map img {
+    display: block;
+
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+#mapTitle {
+    position: fixed;
+
+    left: 20px;
+    top: 0;
+
+    z-index: 100;
+
+    color: white;
+}
+
+#mapTitle2 {
+    position: fixed;
+
+    left: 20px;
+    top: 65px;
+
+    margin: 0;
+
+    color: white;
+}
+
+#more {
+    position: fixed;
+
+    left: 20px;
+    top: 90px;
+
+    margin: 0;
+
+    color: white;
+}
+
+.area {
+    position: absolute;
+
+    left: 500px;
+    top: 300px;
+
+    width: 100px;
+    height: 100px;
+
+    padding: 0;
+    margin: 0;
+    border: none;
+
+    background: rgba(255, 0, 0, 0);
+
+    cursor: grab;
+}
+
+#delPuerto {
+    left: 280px;
+    top: 1190px;
+
+    width: 1000px;
+    height: 790px;
+
+    transform: rotate(8deg);
+    background: rgba(0, 255, 0, 0);
+}
+
+#creatorPark {
+    left: 290px;
+    top: 290px;
+
+    width: 1050px;
+    height: 910px;
+
+    transform: rotate(8deg);
+    background: rgba(0, 0, 255, 0);
+}
+
+#stoneWismant {
+    left: 210px;
+    top: 21px;
+
+    width: 250px;
+    height: 700px;
+
+    transform: rotate(-25deg);
+    background: rgba(255, 0, 234, 0);
+}
+
+#fountaunCreator {
+    left: 650px;
+    top: 755px;
+
+    width: 250px;
+    height: 250px;   
+}
+
+#makarona {
+    left: 647px;
+    top: 470px;
+
+    width: 250px;
+    height: 250px;   
+}
+
+#walkOfFame {
+    left: 790px;
+    top: 1010px;
+
+    width: 200px;
+    height: 100px;   
+}
+
+#bigThrees {
+    left: 492px ;
+    top: 984px;
+
+    width: 150px;
+    height: 150px;   
+}
+
+#firstStreet {
+    left: 350px;
+    top: 1200px;
+
+    width: 910px;
+    height: 100px;
+
+    transform: rotate(8deg);
+}
+
+#ved1makStreet {
+    left: 1075px;
+    top: 1347px;
+
+    width: 120px;
+    height: 505px;
+
+    transform: rotate(8deg);
+}
+
+#problemStreet {
+    left: 657px;
+    top: 1797px;
+
+    width: 420px;
+    height: 80px;
+
+    transform: rotate(8deg);
+}
+
+#hotelGrandRed {
+    left: 845px ;
+    top: 1323px;
+
+    width: 250px;
+    height: 250px;  
+
+    transform: rotate(8deg);
+}
+
+#hotelGrandGreen {
+    left: 811px;
+    top: 1559px;
+
+    width: 250px;
+    height: 250px;  
+
+    transform: rotate(8deg);
+}
+
+#home1 {
+    left: 650px ;
+    top: 1290px;
+
+    width: 195px;
+    height: 280px;  
+
+    transform: rotate(8deg);
+}
+
+#home2 {
+    left: 490px ;
+    top: 1270px;
+
+    width: 185px;
+    height: 280px;  
+
+    transform: rotate(8deg);
+}
+
+#laCantina {
+    left: 310px ;
+    top: 1243px;
+
+    width: 185px;
+    height: 280px;  
+
+    transform: rotate(8deg);
+}
+
+#narkoHome {
+    left: 655px ;
+    top: 1560px;
+
+    width: 160px;
+    height: 220px;  
+
+    transform: rotate(8deg);
+}
