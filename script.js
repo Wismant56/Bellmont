@@ -123,13 +123,18 @@ let fingers = new Map();
 
 let touchStartX = 0;
 let touchStartY = 0;
+
 let touchStartMapX = 0;
 let touchStartMapY = 0;
 
 let pinchStartDistance = 0;
 let pinchStartScale = 1;
-let pinchWorldX = 0;
-let pinchWorldY = 0;
+
+let pinchStartCenterX = 0;
+let pinchStartCenterY = 0;
+
+let pinchStartMapX = 0;
+let pinchStartMapY = 0;
 
 
 // Расстояние между пальцами
@@ -141,7 +146,19 @@ function getDistance(a, b) {
 }
 
 
-// Начало касания
+// Центр между пальцами
+function getCenter(a, b) {
+    return {
+        x: (a.x + b.x) / 2,
+        y: (a.y + b.y) / 2
+    };
+}
+
+
+// =========================
+// НАЧАЛО КАСАНИЯ
+// =========================
+
 document.addEventListener("pointerdown", (e) => {
 
     if (e.pointerType !== "touch") {
@@ -157,16 +174,19 @@ document.addEventListener("pointerdown", (e) => {
         y: e.clientY
     });
 
+
     // Первый палец
     if (fingers.size === 1) {
 
-        dragging = true;
+        const point = [...fingers.values()][0];
 
-        touchStartX = e.clientX;
-        touchStartY = e.clientY;
+        touchStartX = point.x;
+        touchStartY = point.y;
 
         touchStartMapX = x;
         touchStartMapY = y;
+
+        dragging = true;
 
         return;
     }
@@ -179,29 +199,28 @@ document.addEventListener("pointerdown", (e) => {
 
         const points = [...fingers.values()];
 
-        const centerX =
-            (points[0].x + points[1].x) / 2;
-
-        const centerY =
-            (points[0].y + points[1].y) / 2;
+        const center =
+            getCenter(points[0], points[1]);
 
         pinchStartDistance =
             getDistance(points[0], points[1]);
 
         pinchStartScale = scale;
 
-        // Запоминаем точку карты под пальцами
-        pinchWorldX =
-            (centerX - x) / scale;
+        pinchStartCenterX = center.x;
+        pinchStartCenterY = center.y;
 
-        pinchWorldY =
-            (centerY - y) / scale;
+        pinchStartMapX = x;
+        pinchStartMapY = y;
     }
 
 }, true);
 
 
-// Движение
+// =========================
+// ДВИЖЕНИЕ
+// =========================
+
 document.addEventListener("pointermove", (e) => {
 
     if (e.pointerType !== "touch") {
@@ -218,7 +237,10 @@ document.addEventListener("pointermove", (e) => {
     });
 
 
-    // Два пальца — PINCH
+    // =========================
+    // ДВА ПАЛЬЦА
+    // =========================
+
     if (fingers.size === 2) {
 
         e.preventDefault();
@@ -228,13 +250,11 @@ document.addEventListener("pointermove", (e) => {
         const distance =
             getDistance(points[0], points[1]);
 
-        const centerX =
-            (points[0].x + points[1].x) / 2;
-
-        const centerY =
-            (points[0].y + points[1].y) / 2;
+        const center =
+            getCenter(points[0], points[1]);
 
 
+        // Новый масштаб
         scale =
             pinchStartScale *
             (distance / pinchStartDistance);
@@ -245,14 +265,25 @@ document.addEventListener("pointermove", (e) => {
         );
 
 
-        // Сохраняем объект под центром пальцев
+        // Точка карты, которая находилась
+        // под центром пальцев в начале pinch
+        const worldX =
+            (pinchStartCenterX - pinchStartMapX)
+            / pinchStartScale;
+
+        const worldY =
+            (pinchStartCenterY - pinchStartMapY)
+            / pinchStartScale;
+
+
+        // Сохраняем эту точку под пальцами
         x =
-            centerX -
-            pinchWorldX * scale;
+            center.x -
+            worldX * scale;
 
         y =
-            centerY -
-            pinchWorldY * scale;
+            center.y -
+            worldY * scale;
 
 
         updateMap();
@@ -261,7 +292,10 @@ document.addEventListener("pointermove", (e) => {
     }
 
 
-    // Один палец — перемещение
+    // =========================
+    // ОДИН ПАЛЕЦ
+    // =========================
+
     if (fingers.size === 1 && dragging) {
 
         x =
@@ -280,7 +314,10 @@ document.addEventListener("pointermove", (e) => {
 }, true);
 
 
-// Отпускание пальца
+// =========================
+// ОТПУСКАНИЕ
+// =========================
+
 document.addEventListener("pointerup", (e) => {
 
     if (e.pointerType !== "touch") {
@@ -296,7 +333,10 @@ document.addEventListener("pointerup", (e) => {
 }, true);
 
 
-// Отмена
+// =========================
+// ОТМЕНА
+// =========================
+
 document.addEventListener("pointercancel", (e) => {
 
     if (e.pointerType !== "touch") {
