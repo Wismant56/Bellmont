@@ -109,6 +109,83 @@ map.addEventListener("wheel", (e) => {
 
 }, { passive: false });
 
+// =========================
+// PINCH ZOOM НА ТЕЛЕФОНЕ
+// =========================
+
+let fingers = new Map();
+
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+
+map.addEventListener("pointerdown", (e) => {
+    fingers.set(e.pointerId, {
+        x: e.clientX,
+        y: e.clientY
+    });
+
+    if (fingers.size === 2) {
+
+        const points = [...fingers.values()];
+
+        pinchStartDistance = Math.hypot(
+            points[0].x - points[1].x,
+            points[0].y - points[1].y
+        );
+
+        pinchStartScale = scale;
+
+        dragging = false;
+    }
+});
+
+
+map.addEventListener("pointermove", (e) => {
+
+    if (!fingers.has(e.pointerId)) {
+        return;
+    }
+
+    fingers.set(e.pointerId, {
+        x: e.clientX,
+        y: e.clientY
+    });
+
+    if (fingers.size !== 2) {
+        return;
+    }
+
+    const points = [...fingers.values()];
+
+    const distance = Math.hypot(
+        points[0].x - points[1].x,
+        points[0].y - points[1].y
+    );
+
+    const newScale =
+        pinchStartScale *
+        (distance / pinchStartDistance);
+
+    scale = Math.max(
+        0.2,
+        Math.min(newScale, 5)
+    );
+
+    updateMap();
+});
+
+
+function removeFinger(e) {
+    fingers.delete(e.pointerId);
+
+    if (fingers.size < 2) {
+        pinchStartDistance = 0;
+    }
+}
+
+
+map.addEventListener("pointerup", removeFinger);
+map.addEventListener("pointercancel", removeFinger);
 
 // =========================
 // НАВЕДЕНИЕ НА КАРТУ
