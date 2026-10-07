@@ -515,6 +515,17 @@ Object.entries(areas).forEach(([id, data]) => {
     });
 });
 
+// Запрет масштабирования страницы (iOS Safari игнорирует viewport)
+["gesturestart", "gesturechange", "gestureend"].forEach((name) => {
+    document.addEventListener(name, (e) => e.preventDefault());
+});
+
+document.addEventListener("touchmove", (e) => {
+    if (e.touches.length > 1) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
 
 // =========================
 // ЗАПУСК

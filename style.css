@@ -28,37 +28,51 @@ body {
     -webkit-user-drag: none;
 }
 
-#mapTitle {
-    position: fixed;
+#text {
+    width: 50vw;
+}
 
+#mapTitle,#mapTitle2,#more {
+    
+}
+
+#mapTitle {
     left: 20px;
     top: 0;
 
     z-index: 100;
-
+    
+    pointer-events: none;
     color: white;
+    position: fixed;
+    
+    font-size: 100%;
 }
 
 #mapTitle2 {
-    position: fixed;
-
     left: 20px;
-    top: 65px;
+    top: 40px; 
 
     margin: 0;
-
+    
+    pointer-events: none;
     color: white;
+    position: fixed;
+    
+    font-size: 100%;
 }
 
 #more {
-    position: fixed;
-
     left: 20px;
-    top: 90px;
+    top: 70px;
 
     margin: 0;
-
+    
+    pointer-events: none;
     color: white;
+    position: fixed;
+    
+    font-size: 100%;
 }
 
 .area {
